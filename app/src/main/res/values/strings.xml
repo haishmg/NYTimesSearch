@@ -1,11 +1,11 @@
 <resources>
-    <string name="app_name"></string>
+    <string name="app_name">NYT Search</string>
     <string name="search">Article Search</string>
     <string name="action_filter">Filters</string>
-    <string name="search_hint">Search For Articles</string>
+    <string name="search_hint">Articles Search</string>
 
     <string-array name="order_arrays">
-        <item fgcolor="green">Increasing</item>
-        <item fgcolor="blue">Decreasing</item>
+        <item fgcolor="green">newest</item>
+        <item fgcolor="blue">oldest</item>
     </string-array>
 </resources>

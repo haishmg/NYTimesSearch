@@ -87,13 +87,13 @@ public class FilterActivity extends AppCompatActivity implements DatePickerDialo
                     bolArt = true;
                 else
                     bolArt = false;
-                break;
+                    break;
             case R.id.cbFashion:
                 if (checked)
                     bolFashion = true;
                 else
                     bolFashion = false;
-                break;
+                    break;
             case R.id.cbSports:
                 if (checked)
                     bolSports = true;
@@ -113,8 +113,16 @@ public class FilterActivity extends AppCompatActivity implements DatePickerDialo
 
     // handle the date selected
     public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+        monthOfYear++;
+        String day=""+dayOfMonth;
+        String month=""+monthOfYear;
+        if(dayOfMonth < 10)
+             day = "0"+dayOfMonth;
 
-        etDate.setText(monthOfYear+1+"/"+dayOfMonth+"/"+year);
+        if(monthOfYear < 10)
+             month = "0"+monthOfYear;
+
+        etDate.setText(month+"/"+day+"/"+year);
     }
 
 }

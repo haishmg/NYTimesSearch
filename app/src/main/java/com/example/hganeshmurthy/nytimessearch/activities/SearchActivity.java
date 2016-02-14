@@ -7,7 +7,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
-import android.widget.SearchView;
+import android.widget.SearchView.OnQueryTextListener;
 
 import com.example.hganeshmurthy.nytimessearch.ArticleRecyclerViewAdapter;
 import com.example.hganeshmurthy.nytimessearch.EndlessRecyclerViewScrollListener;
@@ -29,21 +29,26 @@ import cz.msebera.android.httpclient.Header;
 
 public class SearchActivity extends AppCompatActivity {
 
-    @Bind(R.id.tbSearch) Toolbar tbSearch;
-    @Bind(R.id.rvArticles) RecyclerView rvArticles;
-    @Bind(R.id.searchView) SearchView searchView;
+    @Bind(R.id.tbSearch)
+    Toolbar tbSearch;
+    @Bind(R.id.rvArticles)
+    RecyclerView rvArticles;
+    @Bind(R.id.searchView)
+    android.widget.SearchView searchView;
     public static final String CLIENT_ID = "62ed57f005883134ce24def61b3fe8dd:1:74339472";
     ArrayList<NYTArticle> allArticles;
     ArticleRecyclerViewAdapter rcAdapter;
-    public static int noOfElements = 0;
-    public static int noOfPages = 0;
+    public  int noOfElements = 0;
+    public  int noOfPages = 1;
     private final int REQUEST_CODE_DISPLAY = 30;
 
-    String date;
-    String order;
-    Boolean arts;
-    Boolean fashion;
-    Boolean sports;
+    String date="";
+    String order="";
+    Boolean arts=false;
+    Boolean fashion=false;
+    Boolean sports=false;
+    String searchQuery;
+    Boolean filter=false;
 
 
     private StaggeredGridLayoutManager gaggeredGridLayoutManager;
@@ -55,25 +60,53 @@ public class SearchActivity extends AppCompatActivity {
         setContentView(R.layout.activity_search);
         ButterKnife.bind(this);
         setSupportActionBar(tbSearch);
-        RecyclerView recyclerView = (RecyclerView)findViewById(R.id.rvArticles);
+        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.rvArticles);
         gaggeredGridLayoutManager = new StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(gaggeredGridLayoutManager);
         allArticles = new ArrayList<>();
-        getArticleData();
-        rcAdapter = new ArticleRecyclerViewAdapter(SearchActivity.this,allArticles);
+        //getArticleData();
+        rcAdapter = new ArticleRecyclerViewAdapter(SearchActivity.this, allArticles);
         recyclerView.setAdapter(rcAdapter);
 
 
-
-         recyclerView.addOnScrollListener(new EndlessRecyclerViewScrollListener(gaggeredGridLayoutManager) {
-           @Override
+        recyclerView.addOnScrollListener(new EndlessRecyclerViewScrollListener(gaggeredGridLayoutManager) {
+            @Override
             public void onLoadMore(int page, int totalItemsCount) {
                 // Triggered only when new data needs to be appended to the list
                 // Add whatever code is needed to append new items to the bottom of the list
                 customLoadMoreDataFromApi(page);
             }
         });
+
+
+        searchView.setOnQueryTextListener(new OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                // perform query here
+
+                // workaround to avoid issues with some emulators and keyboard devices firing twice if a keyboard enter is used
+                // see https://code.google.com/p/android/issues/detail?id=24599
+                searchView.clearFocus();
+                searchQuery = query;
+                if(allArticles != null)
+                   allArticles.clear();
+                if(rcAdapter!= null)
+                    rcAdapter.notifyDataSetChanged();
+                noOfPages = 1;
+                noOfElements = 0;
+                getArticleData();
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
+
+
     }
+
 
     // Append more data into the adapter
     // This method probably sends out a network request and appends new data items to your adapter.
@@ -82,18 +115,39 @@ public class SearchActivity extends AppCompatActivity {
         getArticleData();
     }
 
-    public void getArticleData()
-    {
-        int curSize = 0;
-        int artSize =0;
-        if(rcAdapter != null &&  allArticles.size()>0) {
-            curSize = rcAdapter.getItemCount();
-            artSize = allArticles.size();
-            //allArticles.clear();
-            //rcAdapter.notifyItemRangeChanged(curSize,artSize);
+    public void getArticleData() {
+
+        String url="http://api.nytimes.com/svc/search/v2/articlesearch.json?api-key=" + CLIENT_ID;
+
+        String newsDesk="&fq=news_desk:(";
+
+        if (searchQuery != null)
+         url = url+"&q="+searchQuery;
+        if(order!= "")
+            url =url+"&sort="+order;
+
+
+        if(arts==true)
+            newsDesk = newsDesk+"\"Arts\" ";
+        if(fashion == true)
+            newsDesk = newsDesk+"\"Fashion\" ";
+        if(sports == true)
+            newsDesk = newsDesk+"\"Sports\" ";
+        newsDesk = newsDesk+")";
+
+        if ((arts==true) || (fashion == true) || (sports == true))
+             url = url +newsDesk;
+
+        if(date != "") {
+            String splitDate[] = date.split("/");
+            if(splitDate.length > 0 )
+              url = url + "&end_date=" + splitDate[2] + splitDate[0] + splitDate[1];
         }
 
-        String url = "http://api.nytimes.com/svc/search/v2/articlesearch.json?api-key="+CLIENT_ID+"&page="+noOfPages;
+
+        url = url+ "&page=" + noOfPages;
+
+
         AsyncHttpClient client = new AsyncHttpClient();
         client.get(url, null, new JsonHttpResponseHandler() {
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
@@ -156,14 +210,13 @@ public class SearchActivity extends AppCompatActivity {
     }
 
 
-    public void filterArticles(View view)
-    {
+    public void filterArticles(View view) {
         Intent intent = new Intent(this, FilterActivity.class);
-        intent.putExtra("date",date);
+        intent.putExtra("date", date);
         intent.putExtra("order", order);
-        intent.putExtra("arts",arts);
-        intent.putExtra("fashion",fashion);
-        intent.putExtra("sports",sports);
+        intent.putExtra("arts", arts);
+        intent.putExtra("fashion", fashion);
+        intent.putExtra("sports", sports);
         startActivityForResult(intent, REQUEST_CODE_DISPLAY);
 
     }
@@ -171,65 +224,20 @@ public class SearchActivity extends AppCompatActivity {
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == RESULT_OK && requestCode == REQUEST_CODE_DISPLAY) {
-             date = data.getExtras().getString("date");
-             order = data.getExtras().getString("order");
-             arts = data.getExtras().getBoolean("arts");
-             fashion = data.getExtras().getBoolean("fashion");
-             sports = data.getExtras().getBoolean("sports");
+            date = data.getExtras().getString("date");
+            order = data.getExtras().getString("order");
+            arts = data.getExtras().getBoolean("arts");
+            fashion = data.getExtras().getBoolean("fashion");
+            sports = data.getExtras().getBoolean("sports");
+            if(allArticles != null)
+                allArticles.clear();
+            if(rcAdapter!= null)
+                rcAdapter.notifyDataSetChanged();
+            noOfPages = 1;
+            noOfElements = 0;
+            getArticleData();
 
         }
-    }
-        public void onArticleSearch(View view)
-    {
-        String query = "android";
-        String url = "http://api.nytimes.com/svc/search/v2/articlesearch.json?api-key="+CLIENT_ID+"&q"+query;
-        AsyncHttpClient client = new AsyncHttpClient();
-
-        client.get(url, null, new JsonHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                try {
-                    JSONObject mainJson = response.getJSONObject("response");
-                    JSONArray nYTArticles = mainJson.getJSONArray("docs");
-                    for (int i = 0; i < nYTArticles.length(); i++) {
-
-                        JSONObject articleJson = nYTArticles.getJSONObject(i);
-                        NYTArticle article = new NYTArticle();
-                        if(articleJson.getString("web_url") != null) {
-                            article.setWeb_url(articleJson.getString("web_url") );
-                        }
-                        if(articleJson.getJSONObject("headline").getString("main") != null) {
-                            article.setPrint_headline(articleJson.getJSONObject("headline").getString("main"));
-                        }
-
-                        if(articleJson.getJSONArray("multimedia")!= null) {
-                            JSONArray mutimediaArray = articleJson.getJSONArray("multimedia");
-                            for (int j = 0; j < mutimediaArray.length(); j++) {
-                                JSONObject multimediaJson = mutimediaArray.getJSONObject(j);
-                                if(multimediaJson.getString("width") == "600") {
-                                    article.setMultimedia_url(multimediaJson.getString("url"));
-                                }
-                                else if(multimediaJson.getString("width") == "190") {
-                                    article.setMultimedia_url(multimediaJson.getString("url"));
-                                }
-                                else {
-                                    article.setMultimedia_url(multimediaJson.getString("url"));
-                                }
-                            }
-                        }
-                        allArticles.add(article);
-                    }
-
-                }catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-            @Override
-            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-            }
-        });
-        rcAdapter.notifyDataSetChanged();
-
     }
 
 }
