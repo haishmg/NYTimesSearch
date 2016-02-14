@@ -1,11 +1,13 @@
 package com.example.hganeshmurthy.nytimessearch.activities;
 
+import android.app.Activity;
 import android.app.DatePickerDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
-import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.CheckBox;
 import android.widget.DatePicker;
 import android.widget.EditText;
@@ -31,11 +33,12 @@ public class FilterActivity extends AppCompatActivity implements DatePickerDialo
     String date;
     String order;
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_filter);
-        this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         ButterKnife.bind(this);
         date = getIntent().getExtras().getString("date");
         order =  getIntent().getExtras().getString("order");
@@ -43,15 +46,15 @@ public class FilterActivity extends AppCompatActivity implements DatePickerDialo
         bolFashion =  getIntent().getExtras().getBoolean("fashion");
         bolSports =  getIntent().getExtras().getBoolean("sports");
 
-        if (date != null)
+        if (!date.equals(""))
          etDate.setText(date);
 
-        if (order != null) {
-            int selection = 0;
-            if (order.equals("Medium"))
+        if (!order.equals("")) {
+            int selection=0;
+            if (order.equals("newest"))
+                selection = 0;
+            else if (order.equals("oldest"))
                 selection = 1;
-            else if (order.equals("Low"))
-                selection = 2;
             spOrder.setSelection(selection);
         }
 
@@ -64,6 +67,7 @@ public class FilterActivity extends AppCompatActivity implements DatePickerDialo
 
 
     }
+
 
     public void callSave(View v)
     {
@@ -105,10 +109,18 @@ public class FilterActivity extends AppCompatActivity implements DatePickerDialo
     }
 
 
+    public static void hideKeyboardFrom(Context context, View view) {
+        InputMethodManager imm = (InputMethodManager) context.getSystemService(Activity.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+    }
+
     public void getDateFragment(View v)
     {
+
+        hideKeyboardFrom(this,v);
         DatePickerFragment newFragment = new DatePickerFragment();
         newFragment.show(getSupportFragmentManager(), "datePicker");
+
     }
 
     // handle the date selected
@@ -122,7 +134,10 @@ public class FilterActivity extends AppCompatActivity implements DatePickerDialo
         if(monthOfYear < 10)
              month = "0"+monthOfYear;
 
-        etDate.setText(month+"/"+day+"/"+year);
+        etDate.setText(month + "/" + day + "/" + year);
     }
+
+
+
 
 }

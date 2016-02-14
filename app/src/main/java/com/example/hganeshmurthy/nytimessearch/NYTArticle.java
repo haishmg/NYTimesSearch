@@ -1,11 +1,12 @@
 package com.example.hganeshmurthy.nytimessearch;
 
-import java.io.Serializable;
+import org.parceler.Parcel;
 
 /**
  * Created by hganeshmurthy on 2/10/16.
  */
-public class NYTArticle implements Serializable{
+@Parcel
+public class NYTArticle {
     String web_url;
     String snippet;
     String print_headline;
@@ -17,14 +18,6 @@ public class NYTArticle implements Serializable{
 
     public void setWeb_url(String web_url) {
         this.web_url = web_url;
-    }
-
-    public String getSnippet() {
-        return snippet;
-    }
-
-    public void setSnippet(String snippet) {
-        this.snippet = snippet;
     }
 
     public String getPrint_headline() {

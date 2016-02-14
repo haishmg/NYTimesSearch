@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">NYT Search</string>
+    <string name="app_name"></string>
     <string name="search">Article Search</string>
     <string name="action_filter">Filters</string>
     <string name="search_hint">Articles Search</string>

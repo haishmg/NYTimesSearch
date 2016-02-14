@@ -1,16 +1,22 @@
-package com.example.hganeshmurthy.nytimessearch;
+package com.example.hganeshmurthy.nytimessearch.adapters;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.example.hganeshmurthy.nytimessearch.NYTArticle;
+import com.example.hganeshmurthy.nytimessearch.R;
 import com.example.hganeshmurthy.nytimessearch.activities.DisplayArticle;
-import com.squareup.picasso.Picasso;
+
+import org.parceler.Parcels;
 
 import java.util.ArrayList;
 
@@ -36,13 +42,18 @@ public class ArticleRecyclerViewAdapter extends RecyclerView.Adapter<ArticleRecy
         return rcv;
     }
 
+    public static void hideKeyboardFrom(Context context, View view) {
+        InputMethodManager imm = (InputMethodManager) context.getSystemService(Activity.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+    }
+
     @Override
     public void onBindViewHolder(ArticleViewHolders holder, int position) {
         holder.tvTitle.setText(articleList.get(position).getPrint_headline().toString());
         holder.ivPhoto.setImageResource(0);
         holder.articleUrl = articleList.get(position).web_url.toString();
         String url ="http://www.nytimes.com/" + articleList.get(position).getMultimedia_url();
-        Picasso.with(context).load(url).placeholder(R.drawable.progress_animation).fit().into(holder.ivPhoto);
+        Glide.with(context).load(url).placeholder(R.drawable.progress_animation).fitCenter().into(holder.ivPhoto);
 
 
     }
@@ -76,7 +87,7 @@ public class ArticleRecyclerViewAdapter extends RecyclerView.Adapter<ArticleRecy
             //Toast.makeText(v.getContext(), "Clicked Position view holder = " +getPosition(), Toast.LENGTH_SHORT).show();
             Intent intent = new Intent(v.getContext(), DisplayArticle.class);
             NYTArticle article =  articleList.get(getPosition());
-            intent.putExtra("article", article);
+            intent.putExtra("article", Parcels.wrap(article));
             v.getContext().startActivity(intent);
 
         }

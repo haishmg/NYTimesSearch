@@ -8,8 +8,9 @@ import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.SearchView.OnQueryTextListener;
+import android.widget.Toast;
 
-import com.example.hganeshmurthy.nytimessearch.ArticleRecyclerViewAdapter;
+import com.example.hganeshmurthy.nytimessearch.adapters.ArticleRecyclerViewAdapter;
 import com.example.hganeshmurthy.nytimessearch.EndlessRecyclerViewScrollListener;
 import com.example.hganeshmurthy.nytimessearch.NYTArticle;
 import com.example.hganeshmurthy.nytimessearch.R;
@@ -20,6 +21,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 import butterknife.Bind;
@@ -64,9 +66,9 @@ public class SearchActivity extends AppCompatActivity {
         gaggeredGridLayoutManager = new StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(gaggeredGridLayoutManager);
         allArticles = new ArrayList<>();
-        //getArticleData();
         rcAdapter = new ArticleRecyclerViewAdapter(SearchActivity.this, allArticles);
         recyclerView.setAdapter(rcAdapter);
+        searchView.setQueryHint("Search For Articles");
 
 
         recyclerView.addOnScrollListener(new EndlessRecyclerViewScrollListener(gaggeredGridLayoutManager) {
@@ -82,15 +84,11 @@ public class SearchActivity extends AppCompatActivity {
         searchView.setOnQueryTextListener(new OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                // perform query here
-
-                // workaround to avoid issues with some emulators and keyboard devices firing twice if a keyboard enter is used
-                // see https://code.google.com/p/android/issues/detail?id=24599
                 searchView.clearFocus();
                 searchQuery = query;
-                if(allArticles != null)
-                   allArticles.clear();
-                if(rcAdapter!= null)
+                if (allArticles != null)
+                    allArticles.clear();
+                if (rcAdapter != null)
                     rcAdapter.notifyDataSetChanged();
                 noOfPages = 1;
                 noOfElements = 0;
@@ -104,11 +102,9 @@ public class SearchActivity extends AppCompatActivity {
             }
         });
 
-
     }
 
 
-    // Append more data into the adapter
     // This method probably sends out a network request and appends new data items to your adapter.
     public void customLoadMoreDataFromApi(int offset) {
 
@@ -117,100 +113,117 @@ public class SearchActivity extends AppCompatActivity {
 
     public void getArticleData() {
 
-        String url="http://api.nytimes.com/svc/search/v2/articlesearch.json?api-key=" + CLIENT_ID;
+        String url = "http://api.nytimes.com/svc/search/v2/articlesearch.json?api-key=" + CLIENT_ID;
 
-        String newsDesk="&fq=news_desk:(";
+        String newsDesk = "&fq=news_desk:(";
 
         if (searchQuery != null)
-         url = url+"&q="+searchQuery;
-        if(order!= "")
-            url =url+"&sort="+order;
+            url = url + "&q=" + searchQuery;
+
+        if (!order.equals(""))
+            url = url + "&sort=" + order;
 
 
-        if(arts==true)
-            newsDesk = newsDesk+"\"Arts\" ";
-        if(fashion == true)
-            newsDesk = newsDesk+"\"Fashion\" ";
-        if(sports == true)
-            newsDesk = newsDesk+"\"Sports\" ";
-        newsDesk = newsDesk+")";
+        if (arts == true)
+            newsDesk = newsDesk + "\"Arts\" ";
+        if (fashion == true)
+            newsDesk = newsDesk + "\"Fashion\" ";
+        if (sports == true)
+            newsDesk = newsDesk + "\"Sports\" ";
+        newsDesk = newsDesk + ")";
 
-        if ((arts==true) || (fashion == true) || (sports == true))
-             url = url +newsDesk;
+        if ((arts == true) || (fashion == true) || (sports == true))
+            url = url + newsDesk;
 
-        if(date != "") {
+        if (!date.equals("")) {
             String splitDate[] = date.split("/");
-            if(splitDate.length > 0 )
-              url = url + "&end_date=" + splitDate[2] + splitDate[0] + splitDate[1];
+            if (splitDate.length > 0)
+                url = url + "&end_date=" + splitDate[2] + splitDate[0] + splitDate[1];
         }
 
 
-        url = url+ "&page=" + noOfPages;
+        url = url + "&page=" + noOfPages;
 
+        if (isOnline() == true) {
+            AsyncHttpClient client = new AsyncHttpClient();
+            client.get(url, null, new JsonHttpResponseHandler() {
+                public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                    try {
 
-        AsyncHttpClient client = new AsyncHttpClient();
-        client.get(url, null, new JsonHttpResponseHandler() {
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                try {
-                    JSONObject mainJson = response.getJSONObject("response");
-                    JSONArray nYTArticles = mainJson.getJSONArray("docs");
-                    int flag;
-                    for (int i = 0; i < nYTArticles.length(); i++) {
-                        flag = 0;
-                        noOfElements++;
-                        if (noOfElements % 10 == 0)
-                            noOfPages++;
-                        JSONObject articleJson = nYTArticles.getJSONObject(i);
-                        NYTArticle article = new NYTArticle();
-                        if (articleJson.getString("web_url") != null) {
-                            String web_url = articleJson.getString("web_url");
-                            article.setWeb_url(web_url);
-                        } else {
-                            flag = 1;
-                        }
-                        if (articleJson.getJSONObject("headline").getString("main") != null) {
-
-                            String headline = (articleJson.getJSONObject("headline").getString("main")).replace("&amp;", "&");
-                            article.setPrint_headline(headline);
-                        } else {
-                            flag = 1;
-                        }
-
-                        if (articleJson.getJSONArray("multimedia").length() != 0) {
-                            JSONArray mutimediaArray = articleJson.getJSONArray("multimedia");
-                            for (int j = 0; j < mutimediaArray.length(); j++) {
-                                JSONObject multimediaJson = mutimediaArray.getJSONObject(j);
-                                if (multimediaJson.getInt("width") == 600) {
-                                    article.setMultimedia_url(multimediaJson.getString("url"));
-                                    break;
-                                } else if (multimediaJson.getInt("width") == 190) {
-                                    article.setMultimedia_url(multimediaJson.getString("url"));
+                        JSONObject mainJson = response.getJSONObject("response");
+                        if (mainJson.has("docs") &&  mainJson.getJSONArray("docs").length() >0)
+                             {
+                            JSONArray nYTArticles = mainJson.getJSONArray("docs");
+                            int flag;
+                            for (int i = 0; i < nYTArticles.length(); i++) {
+                                flag = 0;
+                                noOfElements++;
+                                if (noOfElements % 10 == 0)
+                                    noOfPages++;
+                                JSONObject articleJson = nYTArticles.getJSONObject(i);
+                                NYTArticle article = new NYTArticle();
+                                if (articleJson.getString("web_url") != null) {
+                                    String web_url = articleJson.getString("web_url");
+                                    article.setWeb_url(web_url);
                                 } else {
-                                    article.setMultimedia_url(multimediaJson.getString("url"));
+                                    flag = 1;
+                                }
+                                if (articleJson.getJSONObject("headline").getString("main") != null) {
+
+                                    String headline = (articleJson.getJSONObject("headline").getString("main")).replace("&amp;", "&");
+                                    article.setPrint_headline(headline);
+                                } else {
+                                    flag = 1;
+                                }
+
+                                if (articleJson.getJSONArray("multimedia").length() != 0) {
+                                    JSONArray mutimediaArray = articleJson.getJSONArray("multimedia");
+                                    for (int j = 0; j < mutimediaArray.length(); j++) {
+                                        JSONObject multimediaJson = mutimediaArray.getJSONObject(j);
+                                        if (multimediaJson.has("width")) {
+                                            if (multimediaJson.getInt("width") == 600) {
+                                                article.setMultimedia_url(multimediaJson.getString("url"));
+                                                break;
+                                            } else if (multimediaJson.getInt("width") == 190) {
+                                                article.setMultimedia_url(multimediaJson.getString("url"));
+                                            } else {
+                                                article.setMultimedia_url(multimediaJson.getString("url"));
+                                            }
+                                        }
+                                    }
+
+                                } else {
+                                    flag = 1;
+                                }
+                                if (flag == 0) {
+                                    allArticles.add(article);
+                                    rcAdapter.notifyItemChanged(allArticles.size());
                                 }
                             }
-                        } else {
-                            flag = 1;
+                             }
+                        else {
+                            Toast.makeText(SearchActivity.this, "No data found, please change your filters or search for a different article", Toast.LENGTH_LONG).show();
                         }
-                        if (flag == 0) {
-                            allArticles.add(article);
-                            rcAdapter.notifyItemChanged(allArticles.size());
+                        }catch(JSONException e){
+                            e.printStackTrace();
                         }
-                    }
 
-                } catch (JSONException e) {
-                    e.printStackTrace();
+
+
                 }
 
-            }
+                public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                }
+            });
+        }
+        else{
+            Toast.makeText(SearchActivity.this, "Can you please check your internet connection and re-try", Toast.LENGTH_LONG).show();
+        }
 
-            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-            }
-        });
     }
 
-
     public void filterArticles(View view) {
+
         Intent intent = new Intent(this, FilterActivity.class);
         intent.putExtra("date", date);
         intent.putExtra("order", order);
@@ -219,6 +232,17 @@ public class SearchActivity extends AppCompatActivity {
         intent.putExtra("sports", sports);
         startActivityForResult(intent, REQUEST_CODE_DISPLAY);
 
+    }
+
+    public boolean isOnline() {
+        Runtime runtime = Runtime.getRuntime();
+        try {
+            Process ipProcess = runtime.exec("/system/bin/ping -c 1 8.8.8.8");
+            int     exitValue = ipProcess.waitFor();
+            return (exitValue == 0);
+        } catch (IOException e)          { e.printStackTrace(); }
+        catch (InterruptedException e) { e.printStackTrace(); }
+        return false;
     }
 
 
