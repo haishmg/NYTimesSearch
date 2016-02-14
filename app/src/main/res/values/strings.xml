@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name"></string>
+    <string name="search">Article Search</string>
+    <string name="action_filter">Filters</string>
+    <string name="search_hint">Search For Articles</string>
+
+    <string-array name="order_arrays">
+        <item fgcolor="green">Increasing</item>
+        <item fgcolor="blue">Decreasing</item>
+    </string-array>
+</resources>
