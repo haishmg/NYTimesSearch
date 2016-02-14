@@ -10,7 +10,7 @@ import android.view.View;
 import android.widget.SearchView.OnQueryTextListener;
 import android.widget.Toast;
 
-import com.example.hganeshmurthy.nytimessearch.adapters.ArticleRecyclerViewAdapter;
+import com.example.hganeshmurthy.nytimessearch.ArticleRecyclerViewAdapter;
 import com.example.hganeshmurthy.nytimessearch.EndlessRecyclerViewScrollListener;
 import com.example.hganeshmurthy.nytimessearch.NYTArticle;
 import com.example.hganeshmurthy.nytimessearch.R;

@@ -1,4 +1,4 @@
-package com.example.hganeshmurthy.nytimessearch.adapters;
+package com.example.hganeshmurthy.nytimessearch;
 
 import android.app.Activity;
 import android.content.Context;
@@ -12,8 +12,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.example.hganeshmurthy.nytimessearch.NYTArticle;
-import com.example.hganeshmurthy.nytimessearch.R;
 import com.example.hganeshmurthy.nytimessearch.activities.DisplayArticle;
 
 import org.parceler.Parcels;
