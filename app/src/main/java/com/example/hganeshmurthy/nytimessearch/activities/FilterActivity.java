@@ -15,6 +15,9 @@ import android.widget.Spinner;
 
 import com.example.hganeshmurthy.nytimessearch.DatePickerFragment;
 import com.example.hganeshmurthy.nytimessearch.R;
+import com.example.hganeshmurthy.nytimessearch.models.ArticleFilter;
+
+import org.parceler.Parcels;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -40,11 +43,14 @@ public class FilterActivity extends AppCompatActivity implements DatePickerDialo
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_filter);
         ButterKnife.bind(this);
-        date = getIntent().getExtras().getString("date");
-        order =  getIntent().getExtras().getString("order");
-        bolArt =  getIntent().getExtras().getBoolean("arts");
-        bolFashion =  getIntent().getExtras().getBoolean("fashion");
-        bolSports =  getIntent().getExtras().getBoolean("sports");
+
+        ArticleFilter articleFilter = (ArticleFilter) Parcels.unwrap(getIntent().getParcelableExtra("articleFilter"));
+
+        date = articleFilter.getDate();
+        order =  articleFilter.getOrder();
+        bolArt =  articleFilter.getArts();
+        bolFashion =  articleFilter.getFashion();
+        bolSports =  articleFilter.getSports();
 
         if (!date.equals(""))
          etDate.setText(date);

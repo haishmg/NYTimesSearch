@@ -8,6 +8,7 @@ import android.support.v7.widget.ShareActionProvider;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -40,6 +41,13 @@ public class DisplayArticle extends AppCompatActivity {
         wvArticle.loadUrl(article.getWeb_url());
     }
 
+    public void shareArticle(View v)
+    {
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(Intent.EXTRA_TEXT, wvArticle.getUrl().toString());
+        startActivity(Intent.createChooser(shareIntent, "Share link using"));
+    }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();

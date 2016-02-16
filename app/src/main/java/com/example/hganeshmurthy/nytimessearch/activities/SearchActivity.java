@@ -14,12 +14,14 @@ import com.example.hganeshmurthy.nytimessearch.ArticleRecyclerViewAdapter;
 import com.example.hganeshmurthy.nytimessearch.EndlessRecyclerViewScrollListener;
 import com.example.hganeshmurthy.nytimessearch.NYTArticle;
 import com.example.hganeshmurthy.nytimessearch.R;
+import com.example.hganeshmurthy.nytimessearch.models.ArticleFilter;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.JsonHttpResponseHandler;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.parceler.Parcels;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -225,11 +227,8 @@ public class SearchActivity extends AppCompatActivity {
     public void filterArticles(View view) {
 
         Intent intent = new Intent(this, FilterActivity.class);
-        intent.putExtra("date", date);
-        intent.putExtra("order", order);
-        intent.putExtra("arts", arts);
-        intent.putExtra("fashion", fashion);
-        intent.putExtra("sports", sports);
+        ArticleFilter articleFilter = new ArticleFilter(date,order,arts,fashion,sports);
+        intent.putExtra("articleFilter", Parcels.wrap(articleFilter));
         startActivityForResult(intent, REQUEST_CODE_DISPLAY);
 
     }
